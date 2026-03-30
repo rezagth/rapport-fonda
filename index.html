@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Dashboard central des rapports de trading hebdomadaires." />
+  <title>Trading Journal</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --bg-2: #0f1930;
+      --panel: #101a2d;
+      --panel-hover: #162542;
+      --text: #ebf1ff;
+      --muted: #9caecc;
+      --border: #2a3b5f;
+      --accent: #59a8ff;
+      --bullish: #1ecf84;
+      --bearish: #ff6b6b;
+      --range: #ffc857;
+      --positive: #44d68d;
+      --negative: #ff7f7f;
+      --neutral: #9caecc;
+      --shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(1200px 580px at 10% -20%, #1a2a49 0%, transparent 55%),
+        radial-gradient(900px 460px at 100% -10%, #132136 0%, transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font-family: "IBM Plex Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    .layout {
+      width: min(1160px, 94vw);
+      margin: 0 auto;
+      padding: 28px 0 34px;
+    }
+
+    header {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .header-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 1fr 1fr;
+      gap: 10px;
+      background: linear-gradient(160deg, rgba(12, 21, 38, 0.85), rgba(16, 29, 52, 0.88));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .field {
+      display: grid;
+      gap: 4px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      border: 1px solid #31476f;
+      border-radius: 8px;
+      background: #0c1526;
+      color: var(--text);
+      font: inherit;
+      padding: 10px 11px;
+      min-height: 40px;
+    }
+
+    .field input::placeholder {
+      color: #7f92b4;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(89, 168, 255, 0.16);
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .result-count strong {
+      color: var(--text);
+    }
+
+    .reset-btn {
+      border: 1px solid #365482;
+      background: #12213b;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 120ms ease, transform 120ms ease;
+    }
+
+    .reset-btn:hover,
+    .reset-btn:focus-visible {
+      background: #18305a;
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(292px, 1fr));
+      gap: 12px;
+      min-height: 180px;
+    }
+
+    .report-card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      background: linear-gradient(155deg, rgba(18, 29, 50, 0.92) 0%, rgba(16, 26, 45, 0.96) 100%);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+    }
+
+    .report-card:hover,
+    .report-card:focus-visible {
+      transform: translateY(-2px);
+      border-color: #4c6ea7;
+      background: linear-gradient(155deg, rgba(22, 37, 66, 0.96) 0%, rgba(20, 35, 61, 0.98) 100%);
+      outline: none;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .report-title {
+      margin: 0;
+      font-size: 1.03rem;
+      font-weight: 700;
+    }
+
+    .report-week {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 0.81rem;
+    }
+
+    .badge {
+      border-radius: 999px;
+      border: 1px solid currentColor;
+      padding: 0.2rem 0.58rem;
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge.bullish {
+      color: var(--bullish);
+      background: rgba(30, 207, 132, 0.12);
+    }
+
+    .badge.bearish {
+      color: var(--bearish);
+      background: rgba(255, 107, 107, 0.12);
+    }
+
+    .badge.range {
+      color: var(--range);
+      background: rgba(255, 200, 87, 0.12);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px 12px;
+      margin: 0 0 10px;
+    }
+
+    .metric {
+      display: grid;
+      gap: 2px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 0.73rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .metric-value {
+      margin: 0;
+      font-size: 0.96rem;
+      font-weight: 650;
+    }
+
+    .metric-value.positive {
+      color: var(--positive);
+    }
+
+    .metric-value.negative {
+      color: var(--negative);
+    }
+
+    .metric-value.neutral {
+      color: var(--neutral);
+    }
+
+    .card-notes {
+      margin: 0 0 10px;
+      color: #b7c6df;
+      font-size: 0.85rem;
+    }
+
+    .card-link {
+      color: #8ec4ff;
+      font-size: 0.84rem;
+      font-weight: 650;
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      border: 1px dashed #3a527e;
+      border-radius: 12px;
+      padding: 20px;
+      color: var(--muted);
+      background: rgba(14, 24, 43, 0.65);
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    footer {
+      margin-top: 16px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-align: center;
+    }
+
+    @media (max-width: 960px) {
+      .toolbar {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .layout {
+        width: min(1160px, 95vw);
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .status-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .metrics {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <header>
+      <h1>Trading Journal</h1>
+      <p class="header-subtitle">Dashboard central de tes rapports hebdomadaires sélectionnés</p>
+    </header>
+
+    <section class="toolbar" aria-label="Filtres des rapports">
+      <div class="field">
+        <label for="searchInput">Recherche</label>
+        <input id="searchInput" type="search" placeholder="Ex: EUR/USD, NFP, Infracyb" />
+      </div>
+
+      <div class="field">
+        <label for="weekFilter">Semaine</label>
+        <select id="weekFilter">
+          <option value="all">Toutes les semaines</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="biasFilter">Biais</label>
+        <select id="biasFilter">
+          <option value="all">Tous les biais</option>
+          <option value="bullish">Bullish</option>
+          <option value="bearish">Bearish</option>
+          <option value="range">Range</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="resultFilter">Resultat</label>
+        <select id="resultFilter">
+          <option value="all">Tous</option>
+          <option value="positive">PnL positif</option>
+          <option value="negative">PnL negatif</option>
+          <option value="neutral">PnL neutre</option>
+        </select>
+      </div>
+    </section>
+
+    <div class="status-row">
+      <p class="result-count">Rapports affiches: <strong id="resultCount">0</strong></p>
+      <button id="resetBtn" class="reset-btn" type="button">Reinitialiser les filtres</button>
+    </div>
+
+    <main id="reportsGrid" aria-label="Liste des rapports de trading"></main>
+
+    <footer>
+      Dashboard statique compatible GitHub Pages. Les rapports affiches proviennent uniquement de ta liste locale.
+    </footer>
+  </div>
+
+  <script>
+    // Tu gardes uniquement les rapports que tu veux afficher dans ce tableau.
+    const reports = [
+      {
+        file: "infracyb-rapport-hebdo-2026-03-30.html",
+        title: "Infracyb - Rapport Hebdomadaire",
+        weekLabel: "Semaine du 30 mars au 4 avril 2026",
+        dateISO: "2026-03-30",
+        bias: "bearish",
+        trades: 12,
+        pnl: 1840,
+        market: "FX Macro",
+        notes: "Focus EUR/USD et GBP/USD, semaine guidee par Tarifs Trump + NFP."
+      }
+    ];
+
+    const grid = document.getElementById("reportsGrid");
+    const resultCount = document.getElementById("resultCount");
+    const searchInput = document.getElementById("searchInput");
+    const weekFilter = document.getElementById("weekFilter");
+    const biasFilter = document.getElementById("biasFilter");
+    const resultFilter = document.getElementById("resultFilter");
+    const resetBtn = document.getElementById("resetBtn");
+
+    function formatDate(isoDate) {
+      const date = new Date(isoDate + "T00:00:00");
+      return new Intl.DateTimeFormat("fr-FR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+      }).format(date);
+    }
+
+    function formatPnl(value) {
+      const formatted = new Intl.NumberFormat("fr-FR", {
+        style: "currency",
+        currency: "EUR",
+        maximumFractionDigits: 0
+      }).format(Math.abs(value));
+      const sign = value > 0 ? "+" : value < 0 ? "-" : "";
+      return sign + formatted;
+    }
+
+    function pnlClass(value) {
+      if (value > 0) return "positive";
+      if (value < 0) return "negative";
+      return "neutral";
+    }
+
+    function capitalize(value) {
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+    function createWeekOptions() {
+      const uniqueWeeks = [...new Set(reports.map((report) => report.weekLabel))];
+      uniqueWeeks.sort((a, b) => a.localeCompare(b, "fr"));
+      for (const week of uniqueWeeks) {
+        const option = document.createElement("option");
+        option.value = week;
+        option.textContent = week;
+        weekFilter.appendChild(option);
+      }
+    }
+
+    function matchesFilters(report) {
+      const q = searchInput.value.trim().toLowerCase();
+      const selectedWeek = weekFilter.value;
+      const selectedBias = biasFilter.value;
+      const selectedResult = resultFilter.value;
+
+      const haystack = [
+        report.title,
+        report.weekLabel,
+        report.market,
+        report.notes,
+        report.file,
+        report.bias
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      const matchSearch = q.length === 0 || haystack.includes(q);
+      const matchWeek = selectedWeek === "all" || report.weekLabel === selectedWeek;
+      const matchBias = selectedBias === "all" || report.bias === selectedBias;
+
+      let matchResult = true;
+      if (selectedResult === "positive") matchResult = report.pnl > 0;
+      if (selectedResult === "negative") matchResult = report.pnl < 0;
+      if (selectedResult === "neutral") matchResult = report.pnl === 0;
+
+      return matchSearch && matchWeek && matchBias && matchResult;
+    }
+
+    function renderReports() {
+      const filtered = reports
+        .filter(matchesFilters)
+        .sort((a, b) => new Date(b.dateISO) - new Date(a.dateISO));
+
+      resultCount.textContent = String(filtered.length);
+
+      if (filtered.length === 0) {
+        grid.innerHTML = "<div class=\"empty-state\">Aucun rapport ne correspond aux filtres. Ajuste la recherche ou ajoute un rapport dans le tableau reports.</div>";
+        return;
+      }
+
+      grid.innerHTML = filtered
+        .map((report) => {
+          const pnlState = pnlClass(report.pnl);
+          return `
+            <a class="report-card" href="${report.file}">
+              <div class="card-top">
+                <div>
+                  <h2 class="report-title">${report.title}</h2>
+                  <p class="report-week">${report.weekLabel}</p>
+                </div>
+                <span class="badge ${report.bias}">${capitalize(report.bias)}</span>
+              </div>
+              <dl class="metrics">
+                <div class="metric">
+                  <dt class="metric-label">Date</dt>
+                  <dd class="metric-value">${formatDate(report.dateISO)}</dd>
+                </div>
+                <div class="metric">
+                  <dt class="metric-label">Marche</dt>
+                  <dd class="metric-value">${report.market}</dd>
+                </div>
+                <div class="metric">
+                  <dt class="metric-label">Trades</dt>
+                  <dd class="metric-value">${report.trades}</dd>
+                </div>
+                <div class="metric">
+                  <dt class="metric-label">PnL semaine</dt>
+                  <dd class="metric-value ${pnlState}">${formatPnl(report.pnl)}</dd>
+                </div>
+              </dl>
+              <p class="card-notes">${report.notes}</p>
+              <span class="card-link">Voir le rapport</span>
+            </a>
+          `;
+        })
+        .join("");
+    }
+
+    function resetFilters() {
+      searchInput.value = "";
+      weekFilter.value = "all";
+      biasFilter.value = "all";
+      resultFilter.value = "all";
+      renderReports();
+    }
+
+    createWeekOptions();
+    renderReports();
+
+    searchInput.addEventListener("input", renderReports);
+    weekFilter.addEventListener("change", renderReports);
+    biasFilter.addEventListener("change", renderReports);
+    resultFilter.addEventListener("change", renderReports);
+    resetBtn.addEventListener("click", resetFilters);
+  </script>
+</body>
+</html>
