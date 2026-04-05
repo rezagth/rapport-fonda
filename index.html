@@ -328,7 +328,7 @@
     <section class="toolbar" aria-label="Filtres des rapports">
       <div class="field">
         <label for="searchInput">Recherche</label>
-        <input id="searchInput" type="search" placeholder="Ex: EUR/USD, NFP, Infracyb" />
+        <input id="searchInput" type="search" placeholder="Ex: EUR/USD, NFP, Infracyb" autocomplete="off" />
       </div>
 
       <div class="field">
@@ -534,7 +534,7 @@
     }
 
     createWeekOptions();
-    renderReports();
+    resetFilters();
 
     searchInput.addEventListener("input", renderReports);
     weekFilter.addEventListener("change", renderReports);
